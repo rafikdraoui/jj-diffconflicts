@@ -1,0 +1,5 @@
+# vimdoc tags
+/doc/tags
+
+# test repository created by `make-conflicts.sh`
+/testrepo

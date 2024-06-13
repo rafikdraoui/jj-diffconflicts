@@ -1,0 +1,66 @@
+*jj-diffconflicts*  A conflict resolution merge tool for Jujutsu VCS
+
+This plugin converts a file containing Jujutsu conflict markers into a two-way
+diff for easier merge conflict resolution. It is heavily inspired by the
+`diffconflicts` plugin (https://github.com/whiteinge/diffconflicts).
+
+For more information, see the `README` file in the repository for the plugin
+at https://github.com/rafikdraoui/jj-diffconflicts.
+
+To configure this plugin as a merge tool in Jujutsu, add the following to your
+Jujutsu configuration:
+>
+    [merge-tools.diffconflicts]
+    merge-args = ["-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right"]
+    merge-tool-edits-conflict-markers = true
+    program = "nvim"
+<
+It can then be invoked with `jj resolve --tool diffconflicts`.
+
+If you don't want to use the history view, you can instead set `merge-args` to
+`["-c", "JJDiffConflicts", "$output"]`.
+
+==============================================================================
+
+Command ~
+
+:JJDiffConflicts[!]                                           *:JJDiffConflicts*
+
+    Convert a file containing Jujutsu conflict markers into a two-way diff.
+
+    If the optional ! is used, then a history view is also opened in a new
+    tab. It will contain the merge base and both versions of the conflicted
+    files. This requires the `$base`, `$left`, and `$right` files being passed
+    as arguments when opening Neovim as a merge tool.
+
+    See also: |g:jj_diffconflicts_no_command|
+
+
+Options ~
+
+g:jj_diffconflicts_jujutsu_version          *g:jj_diffconflicts_jujutsu_version*
+
+    Specify the version of Jujutsu that is in use. This can matter because
+    different versions differ in how they generate conflict markers.
+
+    If unset (the default), `jj-diffconflicts` will detect the version by
+    executing `jj --version`. You can set this variable if running the `jj`
+    binary is not desirable.
+
+    Example:
+        `let g:jj_diffconflicts_jujutsu_version='0.17.1'`
+
+g:jj_diffconflicts_no_command                    *g:jj_diffconflicts_no_command*
+
+    Set this variable if you don't want the |:JJDiffConflicts| command to be
+    automatically defined. When set, the main plugin function can instead be
+    run with `require("jj-diffconflicts").run()`
+
+
+Health check ~
+
+A |health| check is included to detect possible misconfigurations. It can be
+run with `:checkhealth jj-diffconflicts`.
+
+
+vim:tw=78:ts=8:ft=help:norl
