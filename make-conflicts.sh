@@ -5,9 +5,12 @@
 #
 # Adapted from https://github.com/whiteinge/diffconflicts/blob/master/_utils/make-conflicts.sh
 
+# Enable running a different `jj` binary by setting the $JJ environment variable
+JJ=${JJ:-jj}
+
 # Initialize new repository
 rm -rf testrepo
-jj git init testrepo
+${JJ} git init testrepo
 cd testrepo || exit 1
 
 # Create initial revision
@@ -27,8 +30,8 @@ apple
 grape
 orange
 EOF
-jj branch create base
-jj commit -m 'Initial revision'
+${JJ} branch create base
+${JJ} commit -m 'Initial revision'
 
 # Create one side of the conflict
 cat <<EOF >poem.txt
@@ -47,11 +50,11 @@ apple
 grapefruit
 orange
 EOF
-jj branch create left
-jj describe -m 'Fix syntax mistakes, eat grapefruit'
+${JJ} branch create left
+${JJ} describe -m 'Fix syntax mistakes, eat grapefruit'
 
 # Create the other side of the conflict
-jj new base
+${JJ} new base
 cat <<EOF >poem.txt
 twas brillig, and the slithy toves
 Did gyre and gimble in the wabe:
@@ -68,8 +71,8 @@ APPLE
 GRAPE
 ORANGE
 EOF
-jj branch create right
-jj describe -m 'Fix syntax mistakes, ALL CAPS fruits'
+${JJ} branch create right
+${JJ} describe -m 'Fix syntax mistakes, ALL CAPS fruits'
 
 # Create a new (conflicted) change from both sides
-jj new left right -m 'Merge left and right'
+${JJ} new left right -m 'Merge left and right'
