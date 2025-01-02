@@ -39,7 +39,10 @@ To configure as a merge tool in Jujutsu, add the following to your [Jujutsu conf
 ```toml
 [merge-tools.diffconflicts]
 program = "nvim"
-merge-args = ["-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right"]
+merge-args = [
+    "-c", "let g:jj_diffconflicts_marker_length=$marker_length",
+    "-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right",
+]
 merge-tool-edits-conflict-markers = true
 ```
 
@@ -54,13 +57,16 @@ If you don't want to use the history view, you can instead set `merge-args` to `
 
 ## Test repository
 
-The `make-conflicts.sh` script creates a Jujutsu repository in the `testrepo` directory whose working copy has two conflicted files.
+The `make-conflicts.sh` script creates a Jujutsu repository in the `testrepo` directory whose working copy has conflicted files.
 It can be used to try `jj-diffconflicts` (or any other merge tool).
 
 The first file is `fruits.txt`, which contains the merge conflict described in the [Conflicts][] section of Jujutsu's documentation.
 
 The second file is `poem.txt`, which contains a tricky merge conflict.
 When resolving it, one should keep in mind the points from the [merge tools benchmarks][] to judge its effectiveness.
+
+The third file is `long_markers.txt`, which the contains the merge conflict described in the [Long conflict markers][] section of the Jujutsu's documentation.
+It can be used to test if the merge tool can handle markers of length higher than the default value.
 
 ## Troubleshooting
 
@@ -97,6 +103,7 @@ _Caveat emptor_
 [diffconflicts]: https://github.com/whiteinge/diffconflicts/
 [jujutsu configuration]: https://jj-vcs.github.io/jj/latest/config/
 [jujutsu]: https://jj-vcs.github.io/jj/
+[long conflict markers]: https://jj-vcs.github.io/jj/latest/conflicts/#long-conflict-markers
 [merge tools benchmarks]: https://github.com/whiteinge/diffconflicts/blob/master/_utils/README.md#mergetool-benchmarks
 [neovim]: https://neovim.io/
 [short video]: https://www.youtube.com/watch?v=Pxgl3Wtf78Y

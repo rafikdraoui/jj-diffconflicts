@@ -30,6 +30,10 @@ apple
 grape
 orange
 EOF
+cat <<EOF >long_markers.txt
+Heading
+=======
+EOF
 ${JJ} bookmark create base
 ${JJ} commit -m 'Initial revision'
 
@@ -49,6 +53,10 @@ cat <<EOF >fruits.txt
 apple
 grapefruit
 orange
+EOF
+cat <<EOF >long_markers.txt
+HEADING
+=======
 EOF
 ${JJ} bookmark create left
 ${JJ} describe -m 'Fix syntax mistakes, eat grapefruit'
@@ -70,6 +78,10 @@ cat <<EOF >fruits.txt
 APPLE
 GRAPE
 ORANGE
+EOF
+cat <<EOF >long_markers.txt
+New Heading
+===========
 EOF
 ${JJ} bookmark create right
 ${JJ} describe -m 'Fix syntax mistakes, ALL CAPS fruits'

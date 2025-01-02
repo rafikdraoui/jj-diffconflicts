@@ -18,7 +18,7 @@ local PATTERNS = nil
 -- conflict resolution UI. If the `show_history` argument is true, then it also
 -- includes a history view that displays the two sides of the conflict and
 -- their ancestor.
-M.run = function(show_history)
+M.run = function(show_history, marker_length)
   local ok, jj_version = pcall(M.get_jj_version)
   if not ok then
     vim.notify(
@@ -27,7 +27,14 @@ M.run = function(show_history)
     )
     jj_version = { math.huge, math.huge, math.huge }
   end
-  h.set_patterns(jj_version)
+
+  if marker_length == 0 or marker_length == nil then
+    marker_length = vim.g.jj_diffconflicts_marker_length
+    if marker_length == "" or marker_length == nil then
+      marker_length = 7
+    end
+  end
+  h.set_patterns(jj_version, marker_length)
 
   local ok, raw_conflict = pcall(h.extract_conflict)
   if not ok then
@@ -74,12 +81,12 @@ end
 -- Define regular expression patterns to be used to detect conflict markers. We
 -- cannot just define them as constants, since they can vary based on Jujutsu's
 -- version.
-h.set_patterns = function(jj_version)
+h.set_patterns = function(jj_version, marker_length)
   local marker = {
-    top = "<<<<<<<",
-    bottom = ">>>>>>>",
-    diff = "%%%%%%%",
-    snapshot = "+++++++",
+    top = string.rep("<", marker_length),
+    bottom = string.rep(">", marker_length),
+    diff = string.rep("%", marker_length),
+    snapshot = string.rep("+", marker_length),
   }
 
   if vim.version.lt(jj_version, { 0, 18, 0 }) then

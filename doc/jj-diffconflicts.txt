@@ -11,9 +11,12 @@ To configure this plugin as a merge tool in Jujutsu, add the following to your
 Jujutsu configuration:
 >
     [merge-tools.diffconflicts]
-    merge-args = ["-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right"]
-    merge-tool-edits-conflict-markers = true
     program = "nvim"
+    merge-args = [
+      "-c", "let g:jj_diffconflicts_marker_length=$marker_length",
+      "-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right",
+    ]
+    merge-tool-edits-conflict-markers = true
 <
 It can then be invoked with `jj resolve --tool diffconflicts`.
 
@@ -32,6 +35,11 @@ Command ~
     tab. It will contain the merge base and both versions of the conflicted
     files. This requires the `$base`, `$left`, and `$right` files being passed
     as arguments when opening Neovim as a merge tool.
+
+    If a [count] is given, then it is used as the length of the conflict
+    markers. This can be useful when running the command directly instead of
+    invoking it through `jj resolve`. If no [count] is given, then the merge
+    tool will use the default length of 7 to parse conflict markers.
 
     See also: |g:jj_diffconflicts_no_command|
 
