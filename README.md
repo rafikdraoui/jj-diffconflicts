@@ -93,10 +93,10 @@ _Caveat emptor_
 ![Default conflict markers](./doc/default-conflict-markers.png)
 
 [article]: https://www.eseth.org/2020/mergetools.html
-[conflicts]: https://martinvonz.github.io/jj/latest/conflicts/#conflict-markers
+[conflicts]: https://jj-vcs.github.io/jj/latest/conflicts/#conflict-markers
 [diffconflicts]: https://github.com/whiteinge/diffconflicts/
-[jujutsu configuration]: https://martinvonz.github.io/jj/latest/config/
-[jujutsu]: https://martinvonz.github.io/jj/
+[jujutsu configuration]: https://jj-vcs.github.io/jj/latest/config/
+[jujutsu]: https://jj-vcs.github.io/jj/
 [merge tools benchmarks]: https://github.com/whiteinge/diffconflicts/blob/master/_utils/README.md#mergetool-benchmarks
 [neovim]: https://neovim.io/
 [short video]: https://www.youtube.com/watch?v=Pxgl3Wtf78Y

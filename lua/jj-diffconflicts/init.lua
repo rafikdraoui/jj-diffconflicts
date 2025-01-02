@@ -2,7 +2,7 @@
 --
 -- For an explanation about the terminology used in code comments to describe
 -- conflict markers ("snapshot", "diff section", etc.), refer to
--- https://martinvonz.github.io/jj/latest/conflicts/#conflict-markers
+-- https://jj-vcs.github.io/jj/latest/conflicts/#conflict-markers
 
 local M = {}
 local h = {}
