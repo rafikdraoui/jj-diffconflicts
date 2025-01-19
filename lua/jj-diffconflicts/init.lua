@@ -171,7 +171,17 @@ h.extract_conflict = function()
   -- `nvim_buf_get_lines` is "zero-indexed, end exclusive".
   local lines = vim.api.nvim_buf_get_lines(0, top + 1, bottom, true)
 
-  -- Validate that the expected conflict sections are present
+  h.validate_conflict(lines)
+
+  return {
+    top = top,
+    bottom = bottom,
+    lines = lines,
+  }
+end
+
+-- Validate that the expected conflict sections are present
+h.validate_conflict = function(lines)
   local num_diffs = 0
   local has_snapshot = false
   for _, l in ipairs(lines) do
@@ -192,12 +202,6 @@ h.extract_conflict = function()
   if not has_snapshot then
     h.err("could not find snapshot section of conflict")
   end
-
-  return {
-    top = top,
-    bottom = bottom,
-    lines = lines,
-  }
 end
 
 -- Parse raw lines of conflict marker into the "left", and "right" sections
