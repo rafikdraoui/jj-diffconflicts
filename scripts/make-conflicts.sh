@@ -34,6 +34,22 @@ cat <<EOF >long_markers.txt
 Heading
 =======
 EOF
+cat <<EOF >multiple_conflicts.txt
+X
+X
+X
+apple
+grape
+orange
+X
+X
+X
+X
+X
+apple
+grape
+orange
+EOF
 ${JJ} bookmark create base
 ${JJ} commit -m 'Initial revision'
 
@@ -57,6 +73,22 @@ EOF
 cat <<EOF >long_markers.txt
 HEADING
 =======
+EOF
+cat <<EOF >multiple_conflicts.txt
+X
+X
+X
+apple
+grapefruit
+orange
+X
+X
+X
+X
+X
+apple
+grape
+blood orange
 EOF
 ${JJ} bookmark create left
 ${JJ} describe -m 'Fix syntax mistakes, eat grapefruit'
@@ -82,6 +114,22 @@ EOF
 cat <<EOF >long_markers.txt
 New Heading
 ===========
+EOF
+cat <<EOF >multiple_conflicts.txt
+X
+X
+X
+APPLE
+GRAPE
+ORANGE
+X
+X
+X
+X
+X
+APPLE
+GRAPE
+ORANGE
 EOF
 ${JJ} bookmark create right
 ${JJ} describe -m 'Fix syntax mistakes, ALL CAPS fruits'

@@ -5,22 +5,12 @@ local MiniTest = require("mini.test")
 local expect, eq = MiniTest.expect, MiniTest.expect.equality
 
 local jj = require("jj-diffconflicts")
-local child = MiniTest.new_child_neovim()
 
-local setup_child = function()
-  child.lua([[vim.opt.runtimepath:append(vim.fn.getcwd())]])
-  child.lua([[jj = require("jj-diffconflicts")]])
-end
-local set_lines = function(lines) child.api.nvim_buf_set_lines(0, 0, -1, true, lines) end
 local read_file = function(filename) return vim.iter(io.lines(filename)):totable() end
 
 local default_patterns = jj.get_patterns(jj.get_jj_version(), 7)
 
-local T = MiniTest.new_set({
-  hooks = {
-    post_once = child.stop,
-  },
-})
+local T = MiniTest.new_set()
 
 -- parse_diff {{{1
 T["parse_diff"] = MiniTest.new_set()
@@ -117,38 +107,69 @@ T["parse_conflict"]["raises an error on invalid conflict"] = function()
   expect.error(function() jj.parse_conflict(default_patterns, conflict) end, expected_err)
 end
 
--- extract_conflict {{{1
-T["extract_conflict"] = MiniTest.new_set({
-  hooks = {
-    pre_case = function()
-      child.restart()
-      setup_child()
-      child.lua("default_patterns = jj.get_patterns(jj.get_jj_version(), 7)")
-    end,
-  },
-})
-T["extract_conflict"]["handles valid conflict"] = function()
-  set_lines(read_file("tests/data/fruits.txt"))
-  local conflict = child.lua_get("jj.extract_conflict(default_patterns)")
+-- extract_conflicts {{{1
+T["extract_conflicts"] = MiniTest.new_set()
+T["extract_conflicts"]["handles single conflict"] = function()
+  local lines = read_file("tests/data/fruits.txt")
+  local conflict = jj.extract_conflicts(default_patterns, lines)
   local expected = {
-    top = 3,
-    bottom = 13,
-    lines = {
-      "%%%%%%% Changes from base to side #1",
-      " apple",
-      "-grape",
-      "+grapefruit",
-      " orange",
-      "+++++++ Contents of side #2",
-      "APPLE",
-      "GRAPE",
-      "ORANGE",
+    {
+      top = 4,
+      bottom = 14,
+      lines = {
+        "%%%%%%% Changes from base to side #1",
+        " apple",
+        "-grape",
+        "+grapefruit",
+        " orange",
+        "+++++++ Contents of side #2",
+        "APPLE",
+        "GRAPE",
+        "ORANGE",
+      },
     },
   }
   eq(conflict, expected)
 end
-T["extract_conflict"]["handles conflict numbered higher than 10"] = function()
-  set_lines({
+T["extract_conflicts"]["handles multiple conflicts"] = function()
+  local lines = read_file("tests/data/multiple_conflicts.txt")
+  local conflict = jj.extract_conflicts(default_patterns, lines)
+  local expected = {
+    {
+      top = 4,
+      bottom = 14,
+      lines = {
+        "%%%%%%% Changes from base to side #1",
+        " apple",
+        "-grape",
+        "+grapefruit",
+        " orange",
+        "+++++++ Contents of side #2",
+        "APPLE",
+        "GRAPE",
+        "ORANGE",
+      },
+    },
+    {
+      top = 20,
+      bottom = 30,
+      lines = {
+        "%%%%%%% Changes from base to side #1",
+        " apple",
+        " grape",
+        "-orange",
+        "+blood orange",
+        "+++++++ Contents of side #2",
+        "APPLE",
+        "GRAPE",
+        "ORANGE",
+      },
+    },
+  }
+  eq(conflict, expected)
+end
+T["extract_conflicts"]["handles conflict numbered higher than 10"] = function()
+  local lines = {
     "<<<<<<< Conflict 11 of 12",
     "%%%%%%% Changes from base to side #1",
     " apple",
@@ -160,27 +181,29 @@ T["extract_conflict"]["handles conflict numbered higher than 10"] = function()
     "GRAPE",
     "ORANGE",
     ">>>>>>> Conflict 11 of 12 ends",
-  })
-  local conflict = child.lua_get("jj.extract_conflict(default_patterns)")
+  }
+  local conflict = jj.extract_conflicts(default_patterns, lines)
   local expected = {
-    top = 0,
-    bottom = 10,
-    lines = {
-      "%%%%%%% Changes from base to side #1",
-      " apple",
-      "-grape",
-      "+grapefruit",
-      " orange",
-      "+++++++ Contents of side #2",
-      "APPLE",
-      "GRAPE",
-      "ORANGE",
+    {
+      top = 1,
+      bottom = 11,
+      lines = {
+        "%%%%%%% Changes from base to side #1",
+        " apple",
+        "-grape",
+        "+grapefruit",
+        " orange",
+        "+++++++ Contents of side #2",
+        "APPLE",
+        "GRAPE",
+        "ORANGE",
+      },
     },
   }
   eq(conflict, expected)
 end
-T["extract_conflict"]["raises an error on invalid conflict with no top"] = function()
-  set_lines({
+T["extract_conflicts"]["handles invalid conflict with no top"] = function()
+  local lines = {
     "%%%%%%% Changes from base to side #1",
     "apple",
     "-grape",
@@ -191,14 +214,11 @@ T["extract_conflict"]["raises an error on invalid conflict with no top"] = funct
     "GRAPE",
     "ORANGE",
     ">>>>>>> Conflict 1 of 1 ends",
-  })
-  expect.error(
-    function() child.lua_get("jj.extract_conflict(default_patterns)") end,
-    "could not find top of conflict"
-  )
+  }
+  eq(jj.extract_conflicts(default_patterns, lines), {})
 end
-T["extract_conflict"]["raises an error on invalid conflict with no bottom"] = function()
-  set_lines({
+T["extract_conflicts"]["raises an error on invalid conflict with no bottom"] = function()
+  local lines = {
     "<<<<<<< Conflict 1 of 1",
     "%%%%%%% Changes from base to side #1",
     "apple",
@@ -209,14 +229,14 @@ T["extract_conflict"]["raises an error on invalid conflict with no bottom"] = fu
     "APPLE",
     "GRAPE",
     "ORANGE",
-  })
+  }
   expect.error(
-    function() child.lua_get("jj.extract_conflict(default_patterns)") end,
-    "could not find bottom of conflict"
+    function() jj.extract_conflicts(default_patterns, lines) end,
+    "could not find bottom marker"
   )
 end
-T["extract_conflict"]["raises an error on invalid conflict with no snapshot"] = function()
-  set_lines({
+T["extract_conflicts"]["raises an error on invalid conflict with no snapshot"] = function()
+  local lines = {
     "<<<<<<< Conflict 1 of 1",
     "%%%%%%% Changes from base to side #1",
     "apple",
@@ -224,9 +244,9 @@ T["extract_conflict"]["raises an error on invalid conflict with no snapshot"] = 
     "+grapefruit",
     "orange",
     ">>>>>>> Conflict 1 of 1 ends",
-  })
+  }
   expect.error(
-    function() child.lua_get("jj.extract_conflict(default_patterns)") end,
+    function() jj.extract_conflicts(default_patterns, lines) end,
     "could not find snapshot section"
   )
 end

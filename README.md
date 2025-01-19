@@ -68,6 +68,8 @@ When resolving it, one should keep in mind the points from the [merge tools benc
 The third file is `long_markers.txt`, which the contains the merge conflict described in the [Long conflict markers][] section of the Jujutsu's documentation.
 It can be used to test if the merge tool can handle markers of length higher than the default value.
 
+The fourth file is `multiple_conflicts.txt`, which contains two conflict sections.
+
 ## Troubleshooting
 
 The plugin includes a health check to detect potential issues that would prevent it from functioning properly.
@@ -75,9 +77,9 @@ It can be invoked with `:checkhealth jj-diffconflicts`.
 
 ## Limitations
 
-- It hasn't yet been used on a wide range of conflicts, so it's possible that it doesn't handle some situations very well (for example, multiple conflicts in the same file).
-- It can only resolve one conflict at a time.
-  When there are multiple conflicts, it will have to be invoked repeatedly until all of them have been addressed.
+- It hasn't yet been used on a wide range of conflicts, so it's possible that it doesn't handle some situations very well.
+- It can only resolve one file at a time.
+  When there are multiple conflicted files, it will have to be invoked repeatedly until all of them have been addressed.
 - It can only handle 2-sided conflicts (but this is also a limitation of `jj resolve`).
 - Jujutsu is still evolving, so future versions could bring changes that the plugin can't handle yet.
   For example, conflict markers were changed between v0.17 and v0.18.

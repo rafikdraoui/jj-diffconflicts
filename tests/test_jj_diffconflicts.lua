@@ -69,10 +69,7 @@ T["run"]["raises error for invalid marker length"] = function()
     "marker_length: expected positive number"
   )
 end
-T["run"]["DOES NOT handle multiple conflicts"] = function()
-  MiniTest.add_note(
-    "This test should be amended when support for multiple conflicts is added"
-  )
+T["run"]["handles multiple conflicts"] = function()
   set_lines(read_file("tests/data/multiple_conflicts.txt"))
   child.o.lines = 36
   child.lua("jj.run(false, 7)")

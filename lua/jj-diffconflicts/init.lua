@@ -31,22 +31,31 @@ M.run = function(show_history, marker_length)
   end
   local patterns = h.get_patterns(jj_version, marker_length)
 
-  local ok, raw_conflict = pcall(h.extract_conflict, patterns)
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+  local ok, raw_conflicts = pcall(h.extract_conflicts, patterns, lines)
   if not ok then
     vim.notify(
-      "jj-diffconflicts: extract conflict: " .. raw_conflict,
+      "jj-diffconflicts: extract conflicts: " .. raw_conflicts,
       vim.log.levels.ERROR
     )
     return
   end
-
-  local ok, conflict = pcall(h.parse_conflict, patterns, raw_conflict)
-  if not ok then
-    vim.notify("jj-diffconflicts: parse conflict: " .. conflict, vim.log.levels.ERROR)
+  if vim.tbl_isempty(raw_conflicts) then
+    vim.notify("jj-diffconflicts: no conflicts found in buffer", vim.log.levels.WARN)
     return
   end
 
-  h.setup_ui(conflict, show_history)
+  local conflicts = {}
+  for _, raw_conflict in ipairs(raw_conflicts) do
+    local ok, conflict = pcall(h.parse_conflict, patterns, raw_conflict)
+    if not ok then
+      vim.notify("jj-diffconflicts: parse conflict: " .. conflict, vim.log.levels.ERROR)
+      return
+    end
+    table.insert(conflicts, conflict)
+  end
+
+  h.setup_ui(conflicts, show_history)
 end
 
 -- Return a table representing a software version that can be used as an
@@ -95,45 +104,31 @@ h.get_patterns = function(jj_version, marker_length)
   if vim.version.lt(jj_version, { 0, 18, 0 }) then
     -- Versions prior to v0.18.0 don't include trailing explanations
     return {
-      vim = {
-        top = "^" .. marker.top .. "$",
-        bottom = "^" .. marker.bottom .. "$",
-        diff = "^" .. marker.diff .. "$",
-        snapshot = "^" .. marker.snapshot .. "$",
-      },
-      lua = {
-        top = "^" .. marker.top .. "$",
-        bottom = "^" .. marker.bottom .. "$",
-        -- We need to double `marker.diff` to escape the `%` symbols
-        diff = "^" .. marker.diff .. marker.diff .. "$",
-        snapshot = "^" .. marker.snapshot .. "$",
-      },
+      top = "^" .. marker.top .. "$",
+      bottom = "^" .. marker.bottom .. "$",
+      -- We need to double `marker.diff` to escape the `%` symbols
+      diff = "^" .. marker.diff .. marker.diff .. "$",
+      snapshot = "^" .. marker.snapshot .. "$",
     }
   else
     return {
-      vim = {
-        top = "^" .. marker.top .. [[ Conflict \d\+ of \d\+$]],
-        bottom = "^" .. marker.bottom .. [[ Conflict \d\+ of \d\+ ends$]],
-        diff = "^" .. marker.diff .. [[ Changes from base to side #\d\+$]],
-        snapshot = "^" .. marker.snapshot .. [[ Contents of side #\d\+$]],
-      },
-      lua = {
-        top = "^" .. marker.top .. " Conflict %d+ of %d+$",
-        bottom = "^" .. marker.bottom .. " Conflict %d+ of %d+ ends$",
-        -- We need to double `marker.diff` to escape the `%` symbols
-        diff = "^"
-          .. marker.diff
-          .. marker.diff
-          .. " Changes from base ?#?%d* to side #%d+$",
-        snapshot = "^" .. marker.snapshot .. " Contents of side #%d+$",
-      },
+      top = "^" .. marker.top .. " Conflict %d+ of %d+$",
+      bottom = "^" .. marker.bottom .. " Conflict %d+ of %d+ ends$",
+      -- We need to double `marker.diff` to escape the `%` symbols
+      diff = "^"
+        .. marker.diff
+        .. marker.diff
+        .. " Changes from base ?#?%d* to side #%d+$",
+      snapshot = "^" .. marker.snapshot .. " Contents of side #%d+$",
     }
   end
 end
 
--- Return the raw lines in the conflict section, along with the (0-indexed)
--- line numbers corresponding to its top and bottom. For example, given the
--- following buffer content:
+-- Extract conflict sections from the buffer.
+-- Return a list of objects with the raw contents of the conflicts sections,
+-- along with the line numbers corresponding to their top and bottom.
+--
+-- For example, given the following buffer content:
 --
 --  1| Fruits:
 --  2| <<<<<<< Conflict 1 of 1
@@ -150,40 +145,62 @@ end
 --
 -- Then the following will be returned:
 -- {
---   top = 1,
---   bottom = 11,
---   lines = {
---     "%%%%%%% Changes from base to side #1",
---     " apple", "-grape", "+grapefruit", " orange",
---     "+++++++ Contents of side #2",
---     "APPLE", "GRAPE", "ORANGE",
---   },
+--   {
+--     top = 2,
+--     bottom = 12,
+--     lines = {
+--       "%%%%%%% Changes from base to side #1",
+--       " apple", "-grape", "+grapefruit", " orange",
+--       "+++++++ Contents of side #2",
+--       "APPLE", "GRAPE", "ORANGE",
+--     },
+--   }
 -- }
-h.extract_conflict = function(patterns)
-  -- Find top and bottom lines of conflict.
-  -- We subtract 1 from the results to have them 0-indexed, which makes them
-  -- easier to use with `vim.api.nvim_*` functions.
-  vim.fn.cursor(1, 1)
-  local top = vim.fn.search(patterns.vim.top, "cW") - 1
-  if top == -1 then
-    h.err("could not find top of conflict")
+h.extract_conflicts = function(patterns, buffer_lines)
+  local conflicts = {}
+  local lnum = 1
+  local max_lnum = #buffer_lines
+  while lnum <= max_lnum do
+    local line = buffer_lines[lnum]
+    if string.find(line, patterns.top) then
+      -- We're at the start of a conflict section, iterate through the next
+      -- lines until we find the end of the conflict.
+      local conflict_top = lnum
+      local bottom_found = false
+      lnum = lnum + 1
+      while lnum <= max_lnum and not bottom_found do
+        line = buffer_lines[lnum]
+        if not string.find(line, patterns.bottom) then
+          -- Still inside conflict, continue onwards to next line
+          lnum = lnum + 1
+        else
+          -- We found the bottom. Extract lines between top and bottom markers
+          -- (excluding them) and save them for the return value.
+          bottom_found = true
+          local conflict_bottom = lnum
+          local conflict_lines =
+            vim.list_slice(buffer_lines, conflict_top + 1, conflict_bottom - 1)
+
+          h.validate_conflict(patterns, conflict_lines)
+          table.insert(conflicts, {
+            top = conflict_top,
+            bottom = conflict_bottom,
+            lines = conflict_lines,
+          })
+        end
+      end
+      if not bottom_found then
+        h.err(
+          string.format(
+            "could not find bottom marker matching %q",
+            buffer_lines[conflict_top]
+          )
+        )
+      end
+    end
+    lnum = lnum + 1
   end
-  local bottom = vim.fn.search(patterns.vim.bottom, "W") - 1
-  if bottom == -1 then
-    h.err("could not find bottom of conflict")
-  end
-
-  -- Extract lines between top and bottom markers (excluding them).
-  -- `nvim_buf_get_lines` is "zero-indexed, end exclusive".
-  local lines = vim.api.nvim_buf_get_lines(0, top + 1, bottom, true)
-
-  h.validate_conflict(patterns, lines)
-
-  return {
-    top = top,
-    bottom = bottom,
-    lines = lines,
-  }
+  return conflicts
 end
 
 -- Validate that the expected conflict sections are present
@@ -191,9 +208,9 @@ h.validate_conflict = function(patterns, lines)
   local num_diffs = 0
   local has_snapshot = false
   for _, l in ipairs(lines) do
-    if string.find(l, patterns.lua.diff) then
+    if string.find(l, patterns.diff) then
       num_diffs = num_diffs + 1
-    elseif string.find(l, patterns.lua.snapshot) then
+    elseif string.find(l, patterns.snapshot) then
       has_snapshot = true
     end
   end
@@ -215,8 +232,8 @@ end
 --
 -- For example, given the following input:
 -- {
---   top = 1,
---   bottom = 11,
+--   top = 2,
+--   bottom = 12,
 --   lines = {
 --     "%%%%%%%", " apple", "-grape", "+grapefruit", " orange",
 --     "+++++++", "APPLE", "GRAPE", "ORANGE",
@@ -227,8 +244,8 @@ end
 -- {
 --   left_side = { "apple", "grapefruit", "orange" },
 --   right_side = { "APPLE", "GRAPE", "ORANGE" },
---   top_line = 1,
---   bottom_line = 11,
+--   top_line = 2,
+--   bottom_line = 12,
 -- }
 h.parse_conflict = function(patterns, raw_conflict)
   local lines = raw_conflict.lines
@@ -236,14 +253,14 @@ h.parse_conflict = function(patterns, raw_conflict)
   local snapshot = nil
 
   local section_header = lines[1]
-  if string.find(section_header, patterns.lua.diff) then
+  if string.find(section_header, patterns.diff) then
     -- diff followed by snapshot
-    local i = h.find_index(patterns.lua.snapshot, lines)
+    local i = h.find_index(patterns.snapshot, lines)
     raw_diff = vim.list_slice(lines, 2, i - 1)
     snapshot = vim.list_slice(lines, i + 1, #lines)
-  elseif string.find(section_header, patterns.lua.snapshot) then
+  elseif string.find(section_header, patterns.snapshot) then
     -- snapshot followed by diff
-    local i = h.find_index(patterns.lua.diff, lines)
+    local i = h.find_index(patterns.diff, lines)
     snapshot = vim.list_slice(lines, 2, i - 1)
     raw_diff = vim.list_slice(lines, i + 1, #lines)
   else
@@ -260,7 +277,7 @@ h.parse_conflict = function(patterns, raw_conflict)
   }
 end
 
-h.setup_ui = function(conflict, show_history)
+h.setup_ui = function(conflicts, show_history)
   if show_history then
     -- Set up history view in a separate tab
     vim.cmd.tabnew()
@@ -272,7 +289,7 @@ h.setup_ui = function(conflict, show_history)
   end
 
   -- Set up conflict resolution diff
-  h.setup_diff_splits(conflict)
+  h.setup_diff_splits(conflicts)
 
   -- Display usage message
   vim.cmd.redraw()
@@ -288,30 +305,54 @@ end
 -- materialized conflict (i.e. the section between conflict markers) is
 -- replaced by the "new" version of the diff on the left, and the snapshot on
 -- the right.
-h.setup_diff_splits = function(conflict)
+h.setup_diff_splits = function(conflicts)
   local conflicted_content = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  local top = conflict.top_line
-  local bottom = conflict.bottom_line
 
   -- Set up right-hand side.
   vim.cmd.vsplit({ mods = { split = "belowright" } })
   vim.cmd.enew()
-  vim.api.nvim_buf_set_lines(0, 0, -1, false, conflicted_content)
-  vim.api.nvim_buf_set_lines(0, top, bottom + 1, false, conflict.right_side)
+  local right_side = h.get_content_for_side("right_side", conflicts, conflicted_content)
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, right_side)
   vim.cmd.file("snapshot")
   vim.cmd([[setlocal nomodifiable readonly buftype=nofile bufhidden=delete nobuflisted]])
   vim.cmd.diffthis()
 
   -- Set up left-hand side
   vim.cmd.wincmd("p")
-  vim.api.nvim_buf_set_lines(0, top, bottom + 1, false, conflict.left_side)
+  local left_side = h.get_content_for_side("left_side", conflicts, conflicted_content)
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, left_side)
   vim.cmd.diffthis()
 
   -- Ensure diff highlighting is up to date
   vim.cmd.diffupdate()
 
-  -- Put cursor at the top of the conflict section
-  vim.fn.cursor(top + 1, 1)
+  -- Put cursor at the top of the first conflict section
+  vim.fn.cursor(conflicts[1].top_line, 1)
+end
+
+-- Given a side (one of "left_side" or "right_side"), the full content of the
+-- conflicted buffer (as a list of lines), and a list of conflicts, return the
+-- content (as a list of lines) that should be displayed for that side.
+h.get_content_for_side = function(side, conflicts, conflicted_content)
+  for _, conflict in ipairs(conflicts) do
+    -- Pad the content of the side with null values so that it has the same
+    -- number of lines as the materialized conflict with markers.
+    -- This enables us to replace the conflicts in `conflicted_content` by the
+    -- (shorter) "side content" without shifting the indices (and thus getting
+    -- out of sync with the line numbers in `conflict.{top,bottom}_line`).
+    local span = conflict.bottom_line - conflict.top_line + 1
+    local content_lines = conflict[side]
+    local padding_lines = vim.fn["repeat"]({ vim.NIL }, span - #content_lines)
+    vim.list_extend(content_lines, padding_lines)
+
+    -- Replace materialized conflict with the padded "side content"
+    for i, line in ipairs(content_lines) do
+      conflicted_content[i + conflict.top_line - 1] = line
+    end
+  end
+
+  -- Filter out padding from result
+  return vim.tbl_filter(function(x) return x ~= vim.NIL end, conflicted_content)
 end
 
 -- Display the merge base alongside full copies of the "left" and "right" side
