@@ -1,0 +1,17 @@
+X
+X
+X
+<<<<<<< Conflict 1 of 1
+%%%%%%% Changes from base to side #1
+ apple
+-grape
++grapefruit
+ orange
++++++++ Contents of side #2
+APPLE
+GRAPE
+ORANGE
+>>>>>>> Conflict 1 of 1 ends
+X
+X
+X

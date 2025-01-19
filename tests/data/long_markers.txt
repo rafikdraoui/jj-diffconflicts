@@ -1,0 +1,9 @@
+<<<<<<<<<<<<<<< Conflict 1 of 1
+%%%%%%%%%%%%%%% Changes from base to side #1
+-Heading
++HEADING
+ =======
++++++++++++++++ Contents of side #2
+New Heading
+===========
+>>>>>>>>>>>>>>> Conflict 1 of 1 ends

@@ -381,4 +381,11 @@ end
 
 h.err = function(msg) error(msg, 0) end
 
+if vim.env.TEST ~= nil then
+  -- Export internal functions when running tests
+  for k, v in pairs(h) do
+    M[k] = v
+  end
+end
+
 return M
