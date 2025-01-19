@@ -7,11 +7,6 @@
 local M = {}
 local h = {}
 
--- This variable will contain a table with Vim and Lua regular expressions for
--- finding conflict markers. It is set dynamically through `h.set_patterns`
--- because the patterns vary based on which version of Jujutsu is used.
-local PATTERNS = nil
-
 -- Public functions -----------------------------------------------------------
 
 -- Convert a file containing Jujutsu conflict markers into a two-way diff
@@ -34,9 +29,9 @@ M.run = function(show_history, marker_length)
       marker_length = 7
     end
   end
-  h.set_patterns(jj_version, marker_length)
+  local patterns = h.get_patterns(jj_version, marker_length)
 
-  local ok, raw_conflict = pcall(h.extract_conflict)
+  local ok, raw_conflict = pcall(h.extract_conflict, patterns)
   if not ok then
     vim.notify(
       "jj-diffconflicts: extract conflict: " .. raw_conflict,
@@ -45,7 +40,7 @@ M.run = function(show_history, marker_length)
     return
   end
 
-  local ok, conflict = pcall(h.parse_conflict, raw_conflict)
+  local ok, conflict = pcall(h.parse_conflict, patterns, raw_conflict)
   if not ok then
     vim.notify("jj-diffconflicts: parse conflict: " .. conflict, vim.log.levels.ERROR)
     return
@@ -80,8 +75,16 @@ end
 
 -- Define regular expression patterns to be used to detect conflict markers. We
 -- cannot just define them as constants, since they can vary based on Jujutsu's
--- version.
-h.set_patterns = function(jj_version, marker_length)
+-- version or provided marker length.
+h.get_patterns = function(jj_version, marker_length)
+  vim.validate({
+    marker_length = {
+      marker_length,
+      function(arg) return type(arg) == "number" and arg > 0 end,
+      "positive number",
+    },
+  })
+
   local marker = {
     top = string.rep("<", marker_length),
     bottom = string.rep(">", marker_length),
@@ -91,7 +94,7 @@ h.set_patterns = function(jj_version, marker_length)
 
   if vim.version.lt(jj_version, { 0, 18, 0 }) then
     -- Versions prior to v0.18.0 don't include trailing explanations
-    PATTERNS = {
+    return {
       vim = {
         top = "^" .. marker.top .. "$",
         bottom = "^" .. marker.bottom .. "$",
@@ -107,7 +110,7 @@ h.set_patterns = function(jj_version, marker_length)
       },
     }
   else
-    PATTERNS = {
+    return {
       vim = {
         top = "^" .. marker.top .. [[ Conflict \d\+ of \d\+$]],
         bottom = "^" .. marker.bottom .. [[ Conflict \d\+ of \d\+ ends$]],
@@ -156,16 +159,16 @@ end
 --     "APPLE", "GRAPE", "ORANGE",
 --   },
 -- }
-h.extract_conflict = function()
+h.extract_conflict = function(patterns)
   -- Find top and bottom lines of conflict.
   -- We subtract 1 from the results to have them 0-indexed, which makes them
   -- easier to use with `vim.api.nvim_*` functions.
   vim.fn.cursor(1, 1)
-  local top = vim.fn.search(PATTERNS.vim.top, "cW") - 1
+  local top = vim.fn.search(patterns.vim.top, "cW") - 1
   if top == -1 then
     h.err("could not find top of conflict")
   end
-  local bottom = vim.fn.search(PATTERNS.vim.bottom, "W") - 1
+  local bottom = vim.fn.search(patterns.vim.bottom, "W") - 1
   if bottom == -1 then
     h.err("could not find bottom of conflict")
   end
@@ -174,7 +177,7 @@ h.extract_conflict = function()
   -- `nvim_buf_get_lines` is "zero-indexed, end exclusive".
   local lines = vim.api.nvim_buf_get_lines(0, top + 1, bottom, true)
 
-  h.validate_conflict(lines)
+  h.validate_conflict(patterns, lines)
 
   return {
     top = top,
@@ -184,13 +187,13 @@ h.extract_conflict = function()
 end
 
 -- Validate that the expected conflict sections are present
-h.validate_conflict = function(lines)
+h.validate_conflict = function(patterns, lines)
   local num_diffs = 0
   local has_snapshot = false
   for _, l in ipairs(lines) do
-    if string.find(l, PATTERNS.lua.diff) then
+    if string.find(l, patterns.lua.diff) then
       num_diffs = num_diffs + 1
-    elseif string.find(l, PATTERNS.lua.snapshot) then
+    elseif string.find(l, patterns.lua.snapshot) then
       has_snapshot = true
     end
   end
@@ -227,20 +230,20 @@ end
 --   top_line = 1,
 --   bottom_line = 11,
 -- }
-h.parse_conflict = function(raw_conflict)
+h.parse_conflict = function(patterns, raw_conflict)
   local lines = raw_conflict.lines
   local raw_diff = nil
   local snapshot = nil
 
   local section_header = lines[1]
-  if string.find(section_header, PATTERNS.lua.diff) then
+  if string.find(section_header, patterns.lua.diff) then
     -- diff followed by snapshot
-    local i = h.find_index(PATTERNS.lua.snapshot, lines)
+    local i = h.find_index(patterns.lua.snapshot, lines)
     raw_diff = vim.list_slice(lines, 2, i - 1)
     snapshot = vim.list_slice(lines, i + 1, #lines)
-  elseif string.find(section_header, PATTERNS.lua.snapshot) then
+  elseif string.find(section_header, patterns.lua.snapshot) then
     -- snapshot followed by diff
-    local i = h.find_index(PATTERNS.lua.diff, lines)
+    local i = h.find_index(patterns.lua.diff, lines)
     snapshot = vim.list_slice(lines, 2, i - 1)
     raw_diff = vim.list_slice(lines, i + 1, #lines)
   else
