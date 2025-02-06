@@ -50,7 +50,7 @@ apple
 grape
 orange
 EOF
-${JJ} bookmark create base
+${JJ} bookmark create -r @ base
 ${JJ} commit -m 'Initial revision'
 
 # Create one side of the conflict
@@ -90,7 +90,7 @@ apple
 grape
 blood orange
 EOF
-${JJ} bookmark create left
+${JJ} bookmark create -r @ left
 ${JJ} describe -m 'Fix syntax mistakes, eat grapefruit'
 
 # Create the other side of the conflict
@@ -131,7 +131,7 @@ APPLE
 GRAPE
 ORANGE
 EOF
-${JJ} bookmark create right
+${JJ} bookmark create -r @ right
 ${JJ} describe -m 'Fix syntax mistakes, ALL CAPS fruits'
 
 # Create a new (conflicted) change from both sides
