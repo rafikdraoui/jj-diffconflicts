@@ -70,6 +70,8 @@ It can be used to test if the merge tool can handle markers of length higher tha
 
 The fourth file is `multiple_conflicts.txt`, which contains two conflict sections.
 
+The fifth file is `missing_newline.txt`, which contains a conflict for which one side is missing a terminating newline character.
+
 ## Troubleshooting
 
 The plugin includes a health check to detect potential issues that would prevent it from functioning properly.

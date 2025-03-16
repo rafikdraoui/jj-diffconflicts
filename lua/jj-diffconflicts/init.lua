@@ -112,14 +112,11 @@ h.get_patterns = function(jj_version, marker_length)
     }
   else
     return {
-      top = "^" .. marker.top .. " Conflict %d+ of %d+$",
-      bottom = "^" .. marker.bottom .. " Conflict %d+ of %d+ ends$",
+      top = "^" .. marker.top .. " .+$",
+      bottom = "^" .. marker.bottom .. " .+$",
       -- We need to double `marker.diff` to escape the `%` symbols
-      diff = "^"
-        .. marker.diff
-        .. marker.diff
-        .. " Changes from base ?#?%d* to side #%d+$",
-      snapshot = "^" .. marker.snapshot .. " Contents of side #%d+$",
+      diff = "^" .. marker.diff .. marker.diff .. " .+$",
+      snapshot = "^" .. marker.snapshot .. " .+$",
     }
   end
 end

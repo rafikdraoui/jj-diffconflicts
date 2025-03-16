@@ -1,0 +1,7 @@
+<<<<<<< Conflict 1 of 1
++++++++ Contents of side #1 (no terminating newline)
+grapefruit
+%%%%%%% Changes from base to side #2 (adds terminating newline)
+-grape
++grape
+>>>>>>> Conflict 1 of 1 ends

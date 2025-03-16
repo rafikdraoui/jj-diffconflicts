@@ -50,6 +50,7 @@ apple
 grape
 orange
 EOF
+printf "grape" >missing_newline.txt
 ${JJ} bookmark create -r @ base
 ${JJ} commit -m 'Initial revision'
 
@@ -90,6 +91,7 @@ apple
 grape
 blood orange
 EOF
+printf "grapefruit" >missing_newline.txt
 ${JJ} bookmark create -r @ left
 ${JJ} describe -m 'Fix syntax mistakes, eat grapefruit'
 
@@ -131,6 +133,7 @@ APPLE
 GRAPE
 ORANGE
 EOF
+printf "grape\n" >missing_newline.txt
 ${JJ} bookmark create -r @ right
 ${JJ} describe -m 'Fix syntax mistakes, ALL CAPS fruits'
 

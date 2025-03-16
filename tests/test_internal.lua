@@ -168,6 +168,24 @@ T["extract_conflicts"]["handles multiple conflicts"] = function()
   }
   eq(conflict, expected)
 end
+T["extract_conflicts"]["handles conflicts with missing newline markers"] = function()
+  local lines = read_file("tests/data/missing_newline_markers.txt")
+  local conflict = jj.extract_conflicts(default_patterns, lines)
+  local expected = {
+    {
+      top = 1,
+      bottom = 7,
+      lines = {
+        "+++++++ Contents of side #1 (no terminating newline)",
+        "grapefruit",
+        "%%%%%%% Changes from base to side #2 (adds terminating newline)",
+        "-grape",
+        "+grape",
+      },
+    },
+  }
+  eq(conflict, expected)
+end
 T["extract_conflicts"]["handles conflict numbered higher than 10"] = function()
   local lines = {
     "<<<<<<< Conflict 11 of 12",

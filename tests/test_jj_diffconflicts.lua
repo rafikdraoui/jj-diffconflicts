@@ -14,6 +14,7 @@ local SCREENSHOT = {
   fruits = "tests/screenshots/fruits_ui",
   long_markers = "tests/screenshots/long_markers_ui",
   multiple_conflicts = "tests/screenshots/multiple_conflicts_ui",
+  missing_newline = "tests/screenshots/missing_newline_ui",
 }
 
 local T = MiniTest.new_set({
@@ -74,6 +75,11 @@ T["run"]["handles multiple conflicts"] = function()
   child.o.lines = 36
   child.lua("jj.run(false, 7)")
   expect.reference_screenshot(child.get_screenshot(), SCREENSHOT.multiple_conflicts)
+end
+T["run"]["handles missing newlines conflicts"] = function()
+  set_lines(read_file("tests/data/missing_newline_markers.txt"))
+  child.lua("jj.run(false, 7)")
+  expect.reference_screenshot(child.get_screenshot(), SCREENSHOT.missing_newline)
 end
 
 T["history view"] = MiniTest.new_set()
