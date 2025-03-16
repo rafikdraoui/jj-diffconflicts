@@ -78,8 +78,6 @@ It can be invoked with `:checkhealth jj-diffconflicts`.
 ## Limitations
 
 - It hasn't yet been used on a wide range of conflicts, so it's possible that it doesn't handle some situations very well.
-- It can only resolve one file at a time.
-  When there are multiple conflicted files, it will have to be invoked repeatedly until all of them have been addressed.
 - It can only handle 2-sided conflicts (but this is also a limitation of `jj resolve`).
 - Jujutsu is still evolving, so future versions could bring changes that the plugin can't handle yet.
   For example, conflict markers were changed between v0.17 and v0.18.
