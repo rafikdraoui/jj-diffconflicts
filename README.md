@@ -1,6 +1,6 @@
 # jj-diffconflicts
 
-`jj-diffconflicts` is a merge tool for the [Jujutsu][] version control system that runs in [Neovim][].
+`jj-diffconflicts` is a merge tool for the [Jujutsu] version control system that runs in [Neovim].
 It provides a two-way diff interface to resolve merge conflicts.
 It is heavily inspired by Seth House's [diffconflicts] plugin, which provides the same functionality for the Git and Mercurial version control systems.
 
@@ -9,8 +9,8 @@ It is heavily inspired by Seth House's [diffconflicts] plugin, which provides th
 For explanations about why a two-way diff based on conflict markers might be more effective than a standard 3-way diff that compares file content, you can consult the following resources:
 
 - The ["Why?" section][why] of the README of `whiteinge/diffconflicts`.
-- A [short video][] demonstrating how it works, and how it helps honing on the relevant differences between the conflicted sides.
-- An [article][] contrasting how different tools handle the same conflict.
+- A [short video] demonstrating how it works, and how it helps honing on the relevant differences between the conflicted sides.
+- An [article] contrasting how different tools handle the same conflict.
 
 But perhaps the best way is to [try it yourself](#test-repository).
 
@@ -34,7 +34,7 @@ If you want to abort without resolving the conflict, exit Neovim with `:cq` inst
 
 ### Invoking through `jj resolve`
 
-To configure as a merge tool in Jujutsu, add the following to your [Jujutsu configuration][]:
+To configure as a merge tool in Jujutsu, add the following to your [Jujutsu configuration]:
 
 ```toml
 [merge-tools.diffconflicts]
@@ -60,12 +60,12 @@ If you don't want to use the history view, you can instead set `merge-args` to `
 The `make-conflicts.sh` script creates a Jujutsu repository in the `testrepo` directory whose working copy has conflicted files.
 It can be used to try `jj-diffconflicts` (or any other merge tool).
 
-The first file is `fruits.txt`, which contains the merge conflict described in the [Conflicts][] section of Jujutsu's documentation.
+The first file is `fruits.txt`, which contains the merge conflict described in the [Conflicts] section of Jujutsu's documentation.
 
 The second file is `poem.txt`, which contains a tricky merge conflict.
-When resolving it, one should keep in mind the points from the [merge tools benchmarks][] to judge its effectiveness.
+When resolving it, one should keep in mind the points from the [merge tools benchmarks] to judge its effectiveness.
 
-The third file is `long_markers.txt`, which the contains the merge conflict described in the [Long conflict markers][] section of the Jujutsu's documentation.
+The third file is `long_markers.txt`, which the contains the merge conflict described in the [Long conflict markers] section of the Jujutsu's documentation.
 It can be used to test if the merge tool can handle markers of length higher than the default value.
 
 The fourth file is `multiple_conflicts.txt`, which contains two conflict sections.
@@ -103,8 +103,8 @@ _Caveat emptor_
 [article]: https://www.eseth.org/2020/mergetools.html
 [conflicts]: https://jj-vcs.github.io/jj/latest/conflicts/#conflict-markers
 [diffconflicts]: https://github.com/whiteinge/diffconflicts/
-[jujutsu configuration]: https://jj-vcs.github.io/jj/latest/config/
 [jujutsu]: https://jj-vcs.github.io/jj/
+[jujutsu configuration]: https://jj-vcs.github.io/jj/latest/config/
 [long conflict markers]: https://jj-vcs.github.io/jj/latest/conflicts/#long-conflict-markers
 [merge tools benchmarks]: https://github.com/whiteinge/diffconflicts/blob/master/_utils/README.md#mergetool-benchmarks
 [neovim]: https://neovim.io/
