@@ -11,6 +11,21 @@ M.check = function()
     vim.health.error("Only Neovim 0.10+ is supported")
   end
 
+  local marker_style_cmd =
+    vim.system({ "jj", "config", "get", "ui.conflict-marker-style" }):wait()
+  if marker_style_cmd.code ~= 0 then
+    vim.health.error(
+      "Could not get conflict-marker-style config: " .. marker_style_cmd.stderr
+    )
+  else
+    local marker_style = vim.trim(marker_style_cmd.stdout)
+    if marker_style ~= "diff" then
+      vim.health.error("Unsupported ui.conflict-marker-style: " .. marker_style)
+    else
+      vim.health.ok("ui.conflict-marker-style: " .. marker_style)
+    end
+  end
+
   local ok, version = pcall(require("jj-diffconflicts").get_jj_version)
   if not ok then
     vim.health.error("Could not get Jujutsu version: " .. version)
