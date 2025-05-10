@@ -19,6 +19,9 @@ But perhaps the best way is to [try it yourself](#test-repository).
 `jj-diffconflicts` requires Neovim v0.10.0 or above.
 It can be installed like any other Neovim plugin.
 
+It only supports conflicts that use the (default) "diff" conflict marker style (c.f. `ui.conflict-marker-style` configuration value).
+If you use the "git" conflict marker style, then the [diffconflicts] plugin should be able to handle them.
+
 ## Usage
 
 Documentation is available through `:help jj-diffconflicts`.
