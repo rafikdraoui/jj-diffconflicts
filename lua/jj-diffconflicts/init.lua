@@ -289,11 +289,13 @@ h.setup_ui = function(conflicts, show_history)
   h.setup_diff_splits(conflicts)
 
   -- Display usage message
-  vim.cmd.redraw()
-  vim.notify(
-    "Resolve conflicts leftward then save. Use :cq to abort.",
-    vim.log.levels.WARN
-  )
+  if not vim.g.jj_diffconflicts_turn_off_instructions then
+    vim.cmd.redraw()
+    vim.notify(
+      "Resolve conflicts leftward then save. Use :cq to abort.",
+      vim.log.levels.WARN
+    )
+  end
 end
 
 -- Set up a two-way diff for conflict resolution.
