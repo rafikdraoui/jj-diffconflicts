@@ -56,13 +56,22 @@ g:jj_diffconflicts_jujutsu_version          *g:jj_diffconflicts_jujutsu_version*
     binary is not desirable.
 
     Example:
-        `let g:jj_diffconflicts_jujutsu_version='0.17.1'`
+        `vim.g.jj_diffconflicts_jujutsu_version="0.17.1"`
 
 g:jj_diffconflicts_no_command                    *g:jj_diffconflicts_no_command*
 
     Set this variable if you don't want the |:JJDiffConflicts| command to be
     automatically defined. When set, the main plugin function can instead be
     run with `require("jj-diffconflicts").run()`
+
+g:jj_diffconflicts_show_usage_message    *g:jj_diffconflicts_show_usage_message*
+
+    Set this variable to `false` to hide the usage message at start up.
+
+    Defaults to `true`.
+
+    Example:
+        `vim.g.jj_diffconflicts_show_usage_message=false`
 
 
 Health check ~

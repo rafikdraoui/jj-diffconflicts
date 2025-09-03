@@ -55,7 +55,11 @@ M.run = function(show_history, marker_length)
     table.insert(conflicts, conflict)
   end
 
-  h.setup_ui(conflicts, show_history)
+  local show_usage_message = vim.g.jj_diffconflicts_show_usage_message
+  if show_usage_message == nil then
+    show_usage_message = true
+  end
+  h.setup_ui(conflicts, show_history, show_usage_message)
 end
 
 -- Return a table representing a software version that can be used as an
@@ -274,7 +278,7 @@ h.parse_conflict = function(patterns, raw_conflict)
   }
 end
 
-h.setup_ui = function(conflicts, show_history)
+h.setup_ui = function(conflicts, show_history, show_usage_message)
   if show_history then
     -- Set up history view in a separate tab
     vim.cmd.tabnew()
@@ -287,13 +291,15 @@ h.setup_ui = function(conflicts, show_history)
 
   -- Set up conflict resolution diff
   h.setup_diff_splits(conflicts)
+  vim.cmd.redraw()
 
   -- Display usage message
-  vim.cmd.redraw()
-  vim.notify(
-    "Resolve conflicts leftward then save. Use :cq to abort.",
-    vim.log.levels.WARN
-  )
+  if show_usage_message then
+    vim.notify(
+      "Resolve conflicts leftward then save. Use :cq to abort.",
+      vim.log.levels.WARN
+    )
+  end
 end
 
 -- Set up a two-way diff for conflict resolution.
