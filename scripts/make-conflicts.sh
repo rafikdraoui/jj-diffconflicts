@@ -30,6 +30,13 @@ apple
 grape
 orange
 EOF
+cat <<EOF >fruits.py
+fruits = [
+    "apple",
+    "grape",
+    "orange",
+]
+EOF
 cat <<EOF >long_markers.txt
 Heading
 =======
@@ -70,6 +77,13 @@ cat <<EOF >fruits.txt
 apple
 grapefruit
 orange
+EOF
+cat <<EOF >fruits.py
+fruits = [
+    "apple",
+    "grapefruit",
+    "orange",
+]
 EOF
 cat <<EOF >long_markers.txt
 HEADING
@@ -112,6 +126,13 @@ cat <<EOF >fruits.txt
 APPLE
 GRAPE
 ORANGE
+EOF
+cat <<EOF >fruits.py
+fruits = [
+    "APPLE",
+    "GRAPE",
+    "ORANGE",
+]
 EOF
 cat <<EOF >long_markers.txt
 New Heading
