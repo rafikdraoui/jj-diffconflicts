@@ -41,6 +41,8 @@ Command ~
     invoking it through `jj resolve`. If no [count] is given, then the merge
     tool will use the default length of 7 to parse conflict markers.
 
+    When the UI is ready, the |JJDiffConflictsReady| event is dispatched.
+
     See also: |g:jj_diffconflicts_no_command|
 
 
@@ -73,6 +75,29 @@ g:jj_diffconflicts_show_usage_message    *g:jj_diffconflicts_show_usage_message*
     Example:
         `vim.g.jj_diffconflicts_show_usage_message=false`
 
+
+Autocommand ~
+
+JJDiffConflictsReady                                      *JJDiffConflictsReady*
+
+   This |User| event is dispatched when the conflict resolution UI is loaded.
+   This can be used to run custom code.
+
+   For example, to set a keymap that only does something in the
+   conflict-resolution buffer:
+>
+      vim.api.nvim_create_autocmd("User", {
+        pattern = "JJDiffConflictsReady",
+        desc = "..."
+        callback = function()
+          vim.keymap.set("n", "<leader>x", function()
+            if vim.b.jj_diffconflicts_buftype == "conflicts" then
+              ...
+            end
+          end)
+        end,
+      })
+<
 
 Health check ~
 

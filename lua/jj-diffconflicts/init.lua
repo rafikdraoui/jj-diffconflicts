@@ -293,6 +293,9 @@ h.setup_ui = function(conflicts, show_history, show_usage_message)
   h.setup_diff_splits(conflicts)
   vim.cmd.redraw()
 
+  -- Dispatch `JJDiffConflictsReady` event
+  vim.cmd.doautocmd({ "User", "JJDiffConflictsReady" })
+
   -- Display usage message
   if show_usage_message then
     vim.notify(
@@ -317,6 +320,7 @@ h.setup_diff_splits = function(conflicts)
   local right_side = h.get_content_for_side("right_side", conflicts, conflicted_content)
   vim.api.nvim_buf_set_lines(0, 0, -1, false, right_side)
   vim.cmd.file("snapshot")
+  vim.api.nvim_buf_set_var(0, "jj_diffconflicts_buftype", "snapshot")
   vim.cmd([[setlocal nomodifiable readonly buftype=nofile bufhidden=delete nobuflisted]])
   vim.cmd.diffthis()
 
@@ -324,6 +328,7 @@ h.setup_diff_splits = function(conflicts)
   vim.cmd.wincmd("p")
   local left_side = h.get_content_for_side("left_side", conflicts, conflicted_content)
   vim.api.nvim_buf_set_lines(0, 0, -1, false, left_side)
+  vim.api.nvim_buf_set_var(0, "jj_diffconflicts_buftype", "conflicts")
   vim.cmd.diffthis()
 
   -- Ensure diff highlighting is up to date
@@ -365,6 +370,7 @@ h.setup_history_view = function()
   local load_history_split = function(name)
     vim.cmd.buffer(name) -- open buffer whose name matches the given `name`
     vim.cmd.file(name) -- set the file name
+    vim.api.nvim_buf_set_var(0, "jj_diffconflicts_buftype", "history_" .. name)
     vim.cmd([[setlocal statusline=%t]]) -- only display the file name in status line
     vim.cmd([[setlocal nomodifiable readonly]])
     vim.cmd.diffthis()
