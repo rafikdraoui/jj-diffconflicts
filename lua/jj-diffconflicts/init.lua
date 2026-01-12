@@ -102,6 +102,7 @@ h.get_patterns = function(jj_version, marker_length)
     top = string.rep("<", marker_length),
     bottom = string.rep(">", marker_length),
     diff = string.rep("%", marker_length),
+    diff_cont = string.rep("\\", marker_length),
     snapshot = string.rep("+", marker_length),
   }
 
@@ -112,6 +113,7 @@ h.get_patterns = function(jj_version, marker_length)
       bottom = "^" .. marker.bottom .. "$",
       -- We need to double `marker.diff` to escape the `%` symbols
       diff = "^" .. marker.diff .. marker.diff .. "$",
+      diff_cont = "^" .. marker.diff_cont .. "$",
       snapshot = "^" .. marker.snapshot .. "$",
     }
   else
@@ -120,6 +122,7 @@ h.get_patterns = function(jj_version, marker_length)
       bottom = "^" .. marker.bottom .. " .+$",
       -- We need to double `marker.diff` to escape the `%` symbols
       diff = "^" .. marker.diff .. marker.diff .. " .+$",
+      diff_cont = "^" .. marker.diff_cont .. " .+$",
       snapshot = "^" .. marker.snapshot .. " .+$",
     }
   end
@@ -256,14 +259,24 @@ h.parse_conflict = function(patterns, raw_conflict)
   local section_header = lines[1]
   if string.find(section_header, patterns.diff) then
     -- diff followed by snapshot
+    local diff_start = 2
+    -- Skip continuation line if present (jj v0.37.0+)
+    if lines[2] and string.find(lines[2], patterns.diff_cont) then
+      diff_start = 3
+    end
     local i = h.find_index(patterns.snapshot, lines)
-    raw_diff = vim.list_slice(lines, 2, i - 1)
+    raw_diff = vim.list_slice(lines, diff_start, i - 1)
     snapshot = vim.list_slice(lines, i + 1, #lines)
   elseif string.find(section_header, patterns.snapshot) then
     -- snapshot followed by diff
     local i = h.find_index(patterns.diff, lines)
+    local diff_start = i + 1
+    -- Skip continuation line if present (jj v0.37.0+)
+    if lines[i + 1] and string.find(lines[i + 1], patterns.diff_cont) then
+      diff_start = i + 2
+    end
     snapshot = vim.list_slice(lines, 2, i - 1)
-    raw_diff = vim.list_slice(lines, i + 1, #lines)
+    raw_diff = vim.list_slice(lines, diff_start, #lines)
   else
     h.err("unexpected start for conflict: " .. section_header)
   end
