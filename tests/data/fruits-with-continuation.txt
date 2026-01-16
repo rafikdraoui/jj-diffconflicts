@@ -1,0 +1,18 @@
+X
+X
+X
+<<<<<<< conflict 1 of 1
+%%%%%%% diff from: smwuysts d96e45be "Initial revision"
+\\\\\\\        to: xqsnwlmp daedbf14 "Fix syntax mistakes, eat grapefruit"
+ apple
+-grape
++grapefruit
+ orange
++++++++ kstzunyo 490e82c8 "Fix syntax mistakes, ALL CAPS fruits"
+APPLE
+GRAPE
+ORANGE
+>>>>>>> conflict 1 of 1 ends
+X
+X
+X
