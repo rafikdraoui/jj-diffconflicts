@@ -104,6 +104,12 @@ T["run"]["handles missing newlines conflicts"] = function()
   expect.reference_screenshot(child.get_screenshot(), SCREENSHOT.missing_newline)
   eq(child.lua_get("_G.event_count"), 1)
 end
+T["run"]["handles conflicts with continuation line"] = function()
+  set_lines(read_file("tests/data/fruits-with-continuation.txt"))
+  child.lua("jj.run(false, 7)")
+  expect.reference_screenshot(child.get_screenshot(), SCREENSHOT.fruits)
+  eq(child.lua_get("_G.event_count"), 1)
+end
 T["run"]["hides usage message when g:jj_diffconflicts_show_usage_message is false"] = function()
   set_lines(read_file("tests/data/fruits.txt"))
   child.g.jj_diffconflicts_show_usage_message = false
