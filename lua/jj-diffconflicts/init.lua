@@ -326,6 +326,7 @@ end
 -- the right.
 h.setup_diff_splits = function(conflicts)
   local conflicted_content = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local original_filetype = vim.bo.filetype
 
   -- Set up right-hand side.
   vim.cmd.vsplit({ mods = { split = "belowright" } })
@@ -333,6 +334,7 @@ h.setup_diff_splits = function(conflicts)
   local right_side = h.get_content_for_side("right_side", conflicts, conflicted_content)
   vim.api.nvim_buf_set_lines(0, 0, -1, false, right_side)
   vim.cmd.file("snapshot")
+  vim.bo.filetype = original_filetype
   vim.api.nvim_buf_set_var(0, "jj_diffconflicts_buftype", "snapshot")
   vim.cmd([[setlocal nomodifiable readonly buftype=nofile bufhidden=delete nobuflisted]])
   vim.cmd.diffthis()
