@@ -311,9 +311,11 @@ h.setup_ui = function(conflicts, show_history, show_usage_message)
 
   -- Display usage message
   if show_usage_message then
-    vim.notify(
-      "Resolve conflicts leftward then save. Use :cq to abort.",
-      vim.log.levels.WARN
+    -- We defer printing the message by 100ms, otherwise it is cleared before
+    -- the UI is fully initialized
+    vim.defer_fn(
+      function() vim.notify("Resolve conflicts leftward then save. Use :cq to abort.") end,
+      100
     )
   end
 end
