@@ -5,6 +5,7 @@ local child = MiniTest.new_child_neovim()
 
 local setup_child = function()
   child.lua([[vim.opt.runtimepath:append(vim.fn.getcwd())]])
+  child.cmd([[source plugin/jj_diffconflicts.lua]])
   child.lua([[jj = require("jj-diffconflicts")]])
 
   -- Track how many times JJDiffConflictsReady User event is triggered
@@ -12,6 +13,15 @@ local setup_child = function()
     _G.event_count = 0
     local callback = function() _G.event_count = _G.event_count + 1 end
     vim.api.nvim_create_autocmd('User', { pattern = 'JJDiffConflictsReady', callback = callback})
+  ]])
+
+  -- Track if `vim.notify` has been called
+  child.lua([[
+    local notify = vim.notify
+    vim.notify = function(...)
+      notify(...)
+      _G.notify_called = true
+    end
   ]])
 end
 local set_lines = function(lines) child.api.nvim_buf_set_lines(0, 0, -1, true, lines) end
@@ -116,6 +126,7 @@ T["run"]["hides usage message when g:jj_diffconflicts_show_usage_message is fals
   child.lua("jj.run(false, 7)")
   expect.reference_screenshot(child.get_screenshot(), SCREENSHOT.no_usage_message)
   eq(child.lua_get("_G.event_count"), 1)
+  eq(child.lua_get("_G.notify_called"), vim.NIL)
 end
 
 T["history view"] = MiniTest.new_set()
