@@ -14,7 +14,14 @@ vim.opt.runtimepath:append(vim.env.MINI_NVIM_PATH)
 
 -- Set up 'mini.test'
 local MiniTest = require("mini.test")
-MiniTest.setup()
+MiniTest.setup({
+  execute = {
+    reporter = MiniTest.gen_reporter.stdout({
+      group_depth = (vim.env.VERBOSE and 3) or 2,
+    }),
+    stop_on_error = (vim.env.STOP_ON_ERROR and true) or false,
+  },
+})
 
 -- Run test suite
 MiniTest.run()
