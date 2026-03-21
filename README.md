@@ -16,7 +16,7 @@ But perhaps the best way is to [try it yourself](#test-repository).
 
 ## Installation
 
-`jj-diffconflicts` requires Neovim v0.10.0 or above.
+`jj-diffconflicts` requires Neovim v0.10.0 or above and Jujutsu v0.18.0 or above.
 It can be installed like any other Neovim plugin.
 
 It only supports conflicts that use the (default) "diff" conflict marker style (c.f. `ui.conflict-marker-style` configuration value).
