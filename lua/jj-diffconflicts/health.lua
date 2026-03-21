@@ -1,4 +1,5 @@
 local M = {}
+local h = {}
 
 -- Health check for detecting potential issues with running the plugin.
 -- See `:help health-dev`.
@@ -26,25 +27,35 @@ M.check = function()
     end
   end
 
-  local ok, version = pcall(require("jj-diffconflicts").get_jj_version)
+  local ok, version = pcall(h.get_jj_version)
   if not ok then
     vim.health.error("Could not get Jujutsu version: " .. version)
   else
-    vim.health.info(string.format("Detected Jujutsu version: %s", version))
-  end
-
-  local version_override = vim.g.jj_diffconflicts_jujutsu_version
-  if version_override == nil then
-    vim.health.info("g:jj_diffconflicts_jujutsu_version is unset")
-  else
-    local msg = string.format("g:jj_diffconflicts_jujutsu_version = %q", version_override)
-    local ok = pcall(vim.version.parse, version_override)
-    if ok then
-      vim.health.info(msg)
+    local min_version = vim.version.parse("0.18.0")
+    if vim.version.ge(version, min_version) then
+      vim.health.ok(string.format("Jujutsu version: %s", version))
     else
-      vim.health.error(msg)
+      vim.health.error(
+        string.format(
+          "Jujutsu version: %s (%s or above is required)",
+          version,
+          min_version
+        )
+      )
     end
   end
+end
+
+-- Return a table representing a software version that can be used as an
+-- argument to `vim.version.cmp`.
+h.get_jj_version = function()
+  local version_cmd = vim.system({ "jj", "--version" }):wait()
+  if version_cmd.code ~= 0 then
+    -- Only keep first line of error message
+    error(vim.split(version_cmd.stderr, "\n")[1])
+  end
+
+  return vim.version.parse(version_cmd.stdout)
 end
 
 return M

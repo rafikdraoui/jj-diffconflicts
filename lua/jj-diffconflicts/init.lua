@@ -49,28 +49,6 @@ M.run = function(show_history, marker_length)
   h.setup_ui(conflicts, show_history)
 end
 
--- Return a table representing a software version that can be used as an
--- argument to `vim.version.cmp`.
---
--- If the `g:jj_diffconflicts_jujutsu_version` variable is set, then it will be
--- used as the version. Otherwise we run the `jj` binary to find its version.
---
--- The function is exported because it is used by the plugin health check.
-M.get_jj_version = function()
-  if vim.g.jj_diffconflicts_jujutsu_version ~= nil then
-    -- Escape hatch if running `jj` binary is not desirable
-    return vim.version.parse(vim.g.jj_diffconflicts_jujutsu_version)
-  end
-
-  local version_cmd = vim.system({ "jj", "--version" }):wait()
-  if version_cmd.code ~= 0 then
-    -- Only keep first line of error message
-    h.err(vim.split(version_cmd.stderr, "\n")[1])
-  end
-
-  return vim.version.parse(version_cmd.stdout)
-end
-
 -- Helpers --------------------------------------------------------------------
 
 -- Define regular expression patterns to be used to detect conflict markers. We

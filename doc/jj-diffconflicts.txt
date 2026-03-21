@@ -48,18 +48,6 @@ Command ~
 
 Options ~
 
-g:jj_diffconflicts_jujutsu_version          *g:jj_diffconflicts_jujutsu_version*
-
-    Specify the version of Jujutsu that is in use. This can matter because
-    different versions differ in how they generate conflict markers.
-
-    If unset (the default), `jj-diffconflicts` will detect the version by
-    executing `jj --version`. You can set this variable if running the `jj`
-    binary is not desirable.
-
-    Example:
-        `vim.g.jj_diffconflicts_jujutsu_version="0.17.1"`
-
 g:jj_diffconflicts_no_command                    *g:jj_diffconflicts_no_command*
 
     Set this variable if you don't want the |:JJDiffConflicts| command to be
