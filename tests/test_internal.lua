@@ -8,7 +8,7 @@ local jj = require("jj-diffconflicts")
 
 local read_file = function(filename) return vim.iter(io.lines(filename)):totable() end
 
-local default_patterns = jj.get_patterns(jj.get_jj_version(), 7)
+local default_patterns = jj.get_patterns(7)
 
 local T = MiniTest.new_set()
 

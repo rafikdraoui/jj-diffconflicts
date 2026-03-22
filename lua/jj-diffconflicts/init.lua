@@ -14,22 +14,13 @@ local h = {}
 -- includes a history view that displays the two sides of the conflict and
 -- their ancestor.
 M.run = function(show_history, marker_length)
-  local ok, jj_version = pcall(M.get_jj_version)
-  if not ok then
-    vim.notify(
-      "jj-diffconflicts: could not get jujutsu version, assuming latest version",
-      vim.log.levels.ERROR
-    )
-    jj_version = { math.huge, math.huge, math.huge }
-  end
-
   if marker_length == 0 or marker_length == nil then
     marker_length = vim.g.jj_diffconflicts_marker_length
     if marker_length == "" or marker_length == nil then
       marker_length = 7
     end
   end
-  local patterns = h.get_patterns(jj_version, marker_length)
+  local patterns = h.get_patterns(marker_length)
 
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
   local ok, raw_conflicts = pcall(h.extract_conflicts, patterns, lines)
@@ -58,34 +49,12 @@ M.run = function(show_history, marker_length)
   h.setup_ui(conflicts, show_history)
 end
 
--- Return a table representing a software version that can be used as an
--- argument to `vim.version.cmp`.
---
--- If the `g:jj_diffconflicts_jujutsu_version` variable is set, then it will be
--- used as the version. Otherwise we run the `jj` binary to find its version.
---
--- The function is exported because it is used by the plugin health check.
-M.get_jj_version = function()
-  if vim.g.jj_diffconflicts_jujutsu_version ~= nil then
-    -- Escape hatch if running `jj` binary is not desirable
-    return vim.version.parse(vim.g.jj_diffconflicts_jujutsu_version)
-  end
-
-  local version_cmd = vim.system({ "jj", "--version" }):wait()
-  if version_cmd.code ~= 0 then
-    -- Only keep first line of error message
-    h.err(vim.split(version_cmd.stderr, "\n")[1])
-  end
-
-  return vim.version.parse(version_cmd.stdout)
-end
-
 -- Helpers --------------------------------------------------------------------
 
 -- Define regular expression patterns to be used to detect conflict markers. We
 -- cannot just define them as constants, since they can vary based on Jujutsu's
 -- version or provided marker length.
-h.get_patterns = function(jj_version, marker_length)
+h.get_patterns = function(marker_length)
   vim.validate({
     marker_length = {
       marker_length,
@@ -102,26 +71,14 @@ h.get_patterns = function(jj_version, marker_length)
     snapshot = string.rep("+", marker_length),
   }
 
-  if vim.version.lt(jj_version, { 0, 18, 0 }) then
-    -- Versions prior to v0.18.0 don't include trailing explanations
-    return {
-      top = "^" .. marker.top .. "$",
-      bottom = "^" .. marker.bottom .. "$",
-      -- We need to double `marker.diff` to escape the `%` symbols
-      diff = "^" .. marker.diff .. marker.diff .. "$",
-      diff_cont = "^" .. marker.diff_cont .. "$",
-      snapshot = "^" .. marker.snapshot .. "$",
-    }
-  else
-    return {
-      top = "^" .. marker.top .. " .+$",
-      bottom = "^" .. marker.bottom .. " .+$",
-      -- We need to double `marker.diff` to escape the `%` symbols
-      diff = "^" .. marker.diff .. marker.diff .. " .+$",
-      diff_cont = "^" .. marker.diff_cont .. " .+$",
-      snapshot = "^" .. marker.snapshot .. " .+$",
-    }
-  end
+  return {
+    top = "^" .. marker.top .. " .+$",
+    bottom = "^" .. marker.bottom .. " .+$",
+    -- We need to double `marker.diff` to escape the `%` symbols
+    diff = "^" .. marker.diff .. marker.diff .. " .+$",
+    diff_cont = "^" .. marker.diff_cont .. " .+$",
+    snapshot = "^" .. marker.snapshot .. " .+$",
+  }
 end
 
 -- Extract conflict sections from the buffer.
