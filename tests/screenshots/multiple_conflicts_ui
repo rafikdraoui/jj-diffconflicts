@@ -33,7 +33,7 @@
 32|~                                      │~                                       
 33|~                                      │~                                       
 34|~                                      │~                                       
-35|[No Name] [+]        4,1            All snapshot [RO]         4,1            All
+35|[No Name] [+]        4,1            All snapshot [-][RO]      4,1            All
 36|Resolve conflicts leftward then save. Use :cq to abort.                         
 
 --|---------|---------|---------|---------|---------|---------|---------|---------|
